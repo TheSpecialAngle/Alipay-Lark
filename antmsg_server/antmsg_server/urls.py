@@ -16,8 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from antmsg_receiver.views import receive_antmsg
+from antmsg_receiver.views import alipay_notify
 
 urlpatterns = [
-    path('antmsg/', receive_antmsg),
+    path('alipay_notify/', alipay_notify, name='alipay_notify'),
 ]

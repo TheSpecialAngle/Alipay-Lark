@@ -2,22 +2,38 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse
-import json
+from django.views.decorators.csrf import csrf_exempt
+import alipay
 
-def receive_antmsg(request):
+alipay_PUBLIC_KEY_PATH = 'path/to/alipay_public_key.pem'
+APP_PRIVATE_KEY_PATH = 'path/to/app_private_key.pem'
+APP_ID = 'your_app_id'
+
+@csrf_exempt
+def alipay_notify(request):
     if request.method == 'POST':
-        # 解析请求中的JSON格式的消息
-        msg = json.loads(request.body)
-        # 根据消息类型进行相应的处理
-        if msg['type'] == 'text':
-            # 处理文本消息
-            content = msg['content']
-            # TODO: 进行相应的处理
-        elif msg['type'] == 'image':
-            # 处理图片消息
-            media_id = msg['media_id']
-            # TODO: 进行相应的处理
-        # 返回处理结果
-        return HttpResponse('OK')
+        data = request.POST.dict()
+        alipay_client = alipay(
+            appid=APP_ID,
+            app_notify_url=None,
+            app_private_key_path=APP_PRIVATE_KEY_PATH,
+            alipay_public_key_path=alipay_PUBLIC_KEY_PATH,
+            sign_type="RSA2",
+            debug=False,
+        )
+        sign = data.pop('sign', None)
+        if alipay_client.verify(data, sign):
+            # 验签通过，处理消息
+            trade_status = data.get('trade_status')
+            if trade_status == 'TRADE_SUCCESS':
+                # 处理交易成功的情况
+                return HttpResponse('success')
+            else:
+                # 处理其他情况
+                return HttpResponse('fail')
+        else:
+            # 验签失败，返回错误响应
+            return HttpResponse('fail')
     else:
-        return HttpResponse('Method Not Allowed')
+        # 非POST请求，返回错误响应
+        return HttpResponse('fail')
