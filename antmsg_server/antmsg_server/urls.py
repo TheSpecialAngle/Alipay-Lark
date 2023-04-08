@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+#import secrets
 from antmsg_receiver.views import alipay_notify
+
+#unique_id = secrets.token_hex(16)
 
 urlpatterns = [
     path('alipay_notify/', alipay_notify, name='alipay_notify'),
